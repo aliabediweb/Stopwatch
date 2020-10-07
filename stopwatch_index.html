@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Stopwatch</title>
+
+	<style>
+
+		body {
+			background-color: lightblue;
+			color: black;
+			font-family: monospace;
+			width: 93%;
+			margin: 0px auto;
+		}
+		.controls {
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+		}
+		button {
+			flex: 1;
+			border: none;
+			border-radius: 5px;
+			margin: 5px;
+			padding: 5px;
+			font-weight: bold;
+			letter-spacing: 2px;
+		}
+		.stopwatch {
+			font-size: 5em;
+			text-align: center;
+			margin-top: 20%;
+		}
+		.lapStopwatch {
+			font-size: 2em;
+			text-align: center;
+			margin: 0px auto 40px;
+		}
+		.lap_text {
+			font-size: 0.75em;
+		}
+		.laps_container_header {
+			display: none;
+			flex-direction: row;
+			width: 90%;
+			margin: 30px auto 0px;
+			font-size: 15px;
+			font-weight: bold;
+		}
+		.lap_number_header {
+			flex: 1;
+			list-style-type: none;
+			margin: 20px 0px 10px;
+			padding: 0px;
+			text-align: center;
+		}
+		.lap_time_header {
+			flex: 1;
+			list-style-type: none;
+			margin: 20px 0px 10px;
+			padding: 0px;
+			text-align: center;
+		}
+		.overall_time_header {
+			flex: 1;
+			list-style-type: none;
+			margin: 20px 0px 10px;
+			padding: 0px;
+			text-align: center;
+		}
+		.laps_container {
+			display: flex;
+			flex-direction: row;
+			width: 90%;
+			margin: 0px auto;
+			font-size: 15px;
+			font-weight: bold;
+		}
+		.lap_number {
+			flex: 1;
+			list-style-type: none;
+			display: flex;
+			flex-direction: column-reverse;
+			margin: 0px 0px 20px;
+			padding: 0px;
+			text-align: center;
+		}
+		.lap_time {
+			flex: 1;
+			list-style-type: none;
+			display: flex;
+			flex-direction: column-reverse;
+			margin: 0px 0px 20px;
+			padding: 0px;
+			text-align: center;
+		}
+		.overall_time {
+			flex: 1;
+			list-style-type: none;
+			display: flex;
+			flex-direction: column-reverse;
+			margin: 0px 0px 20px;
+			padding: 0px;
+			text-align: center;
+		}
+		.lap_number_li, .lap_time_li, .overall_time_li {
+			margin-top: 10px;
+		}
+		#start_btn { background-color: lightgreen; }
+		#pause_btn { display: none; }
+		#lap_btn { background-color: #bbb; display: none; }
+		#reset_btn { background-color: #ff8f8f; display: none; }
+		.lap_hr {
+			display: none;
+			border: none;
+			border-top: 1px solid black;
+			width: 90%;
+		}
+	
+	</style>
+
+</head>
+
+<body>
+
+	<div class="stopwatch">00:00:00</div>
+	<div class="lapStopwatch">00:00:00</div>
+
+	<div class="controls">
+		<button id="start_btn" onclick="start()">START</button>
+		<button id="pause_btn" onclick="pause()">PAUSE</button>
+		<button id="lap_btn" onclick="lap()">LAP</button>
+		<button id="reset_btn" onclick="reset()">RESET</button>
+	</div>
+
+	<div class="laps_container_header">
+		<ul class="lap_number_header"><li>LAP</li></ul>
+		<ul class="lap_time_header"><li>LAP TIME</li></ul>
+		<ul class="overall_time_header"><li>OVERALL TIME</li></ul>
+	</div>
+
+	<hr class="lap_hr">
+
+	<div class="laps_container">
+		<ul class="lap_number"></ul>
+		<ul class="lap_time"></ul>
+		<ul class="overall_time"></ul>
+	</div>
+
+
+	<script type="text/javascript">
+
+		// main clock	
+		var ms = 0, s = 0, m = 0;
+		// lap time clock
+		var l_ms = 0, l_s = 0, l_m = 0;
+
+		var lap_number = 0;
+		var timer;
+		var lapTimer;
+
+		var stopwatchEl = document.querySelector(".stopwatch");
+		var lapStopwatchEl = document.querySelector(".lapStopwatch");
+
+		var laps_container_header_node = document.querySelector(".laps_container_header");
+		var lap_hr_node = document.querySelector(".lap_hr");
+		var lap_number_node = document.querySelector(".lap_number");
+		var lap_time_node = document.querySelector(".lap_time");
+		var overall_time_node = document.querySelector(".overall_time");
+		
+
+		var start_btn_node = document.getElementById("start_btn");
+		var pause_btn_node = document.getElementById("pause_btn");
+		var lap_btn_node = document.getElementById("lap_btn");
+		var reset_btn_node = document.getElementById("reset_btn");
+
+
+		function start() {
+			if(!timer) {
+				timer = setInterval(run, 10);
+				lapTimer = setInterval(runLap, 10);
+				// show/hide buttons
+				start_btn_node.style.display = "none";
+				reset_btn_node.style.display = "none";
+				pause_btn_node.style.display = "initial";
+				lap_btn_node.style.display = "initial";
+			}
+		}
+
+		function startLap() {
+			if(!lapTimer) {
+				lapTimer = setInterval(runLap, 10);
+			}
+		}
+
+		function run() {
+			// display main clock 
+			stopwatchEl.textContent = getTimer();
+			ms++;
+			if(ms == 100) {
+				ms = 0;
+				s++;
+			}
+			if(s == 60) {
+				s = 0;
+				m++;
+			}
+			if(m == 99) {
+				reset()
+			}
+		}
+
+		function runLap() {
+			// display lap time clock
+			lapStopwatchEl.textContent = getLapTimer();
+			l_ms++;
+			if(l_ms == 100) {
+				l_ms = 0;
+				l_s++;
+			}
+			if(l_s == 60) {
+				l_s = 0;
+				l_m++;
+			}
+			if(l_m == 99) {
+				reset()
+			}
+		}
+
+		function pause() {
+			stopTimer();
+			stopLapTimer();
+			// show/hide buttons
+			pause_btn_node.style.display = "none";
+			lap_btn_node.style.display = "none";
+			start_btn_node.style.display = "initial";
+			start_btn_node.innerText = "RESUME";
+			reset_btn_node.style.display = "initial";
+		}
+
+		function reset() {
+			stopTimer();
+			stopLapTimer();
+			// hide lap info
+			laps_container_header_node.style.display = "none";
+			lap_hr_node.style.display = "none";
+			// reset both clocks
+			ms = 0;
+			s = 0;
+			m = 0;
+			l_ms = 0;
+			l_s = 0;
+			l_m = 0;
+			lap_number = 0;
+			// display 00:00:00 for both clocks
+			stopwatchEl.textContent = getTimer();
+			lapStopwatchEl.textContent = getLapTimer();
+			// show/hide buttons
+			pause_btn_node.style.display = "none";
+			reset_btn_node.style.display = "none";
+			lap_btn_node.style.display = "none";
+			start_btn_node.style.display = "initial";
+			start_btn_node.innerText = "START";
+			// reset laps
+			lap_number_node.innerHTML = "";
+			lap_time_node.innerHTML = "";
+			overall_time_node.innerHTML = "";
+		}
+
+		function stopTimer() {
+			clearInterval(timer);
+			timer = false;
+		}
+
+		function stopLapTimer() {
+			clearInterval(lapTimer);
+			lapTimer = false;
+		}
+
+		function getTimer() {
+			return (m<10 ? "0"+m : m) + ":" + (s<10 ? "0"+s : s) + ":" + (ms<10 ? "0"+ms : ms);
+		}
+
+		function getLapTimer() {
+			return (l_m<10 ? "0"+l_m : l_m) + ":" + (l_s<10 ? "0"+l_s : l_s) + ":" + (l_ms<10 ? "0"+l_ms : l_ms);
+		}
+
+		function lap() {
+			if(timer) {
+
+				stopLapTimer();
+				// show lap info
+				laps_container_header_node.style.display = "flex";
+				lap_hr_node.style.display = "flex";
+
+				lap_number++
+
+				// lap number list
+				var lap_number_li = document.createElement("lap_number_li");
+				lap_number_li.setAttribute("class", "lap_number_li");
+				lap_number_li.innerText = lap_number;
+				lap_number_node.append(lap_number_li);
+
+				// lap time list
+				var lap_time_li = document.createElement("lap_time_li");
+				lap_time_li.setAttribute("class", "lap_time_li");
+				lap_time_li.innerText = getLapTimer();
+				lap_time_node.append(lap_time_li);
+
+				// overall time list
+				var overall_time_li = document.createElement("overall_time_li");
+				overall_time_li.setAttribute("class", "overall_time_li");
+				overall_time_li.innerText = getTimer();
+				overall_time_node.append(overall_time_li);
+
+				// reset lap clock and start at 00:00:00
+				l_ms = 0;
+				l_s = 0;
+				l_m = 0;
+				startLap();
+			}
+		}
+
+	</script>
+
+</body>
+
+</html>
+
+
+
+<!------------ Copyright © Ali Abedi [October 2020] ------------>
